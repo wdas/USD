@@ -78,6 +78,9 @@ class Usd_Resolver;
 class UsdPrim;
 class UsdPrimRange;
 
+using _NoticePtr = std::unique_ptr<UsdNotice::StageNotice>;
+using _NoticePtrList = std::vector<_NoticePtr>;
+
 SDF_DECLARE_HANDLES(SdfLayer);
 
 /// \class UsdStage
@@ -475,6 +478,36 @@ public:
     USD_API
     void SaveSessionLayers();
 
+    // --------------------------------------------------------------------- //
+    /// \anchor Usd_noticesManagement
+    /// \name Notices Management
+    /// @{
+    // --------------------------------------------------------------------- //
+public:
+    USD_API
+    bool IsInTransaction();
+
+    USD_API
+    void BeginTransaction();
+    USD_API
+    void EndTransaction();
+
+private:
+    template<class T, typename... Args>
+    void _Notify(Args&&...);
+
+    struct _TransactionHandler {
+        _TransactionHandler() {}
+        _TransactionHandler(_TransactionHandler&& t)
+            : noticeMap(std::move(t.noticeMap)) {}
+
+        std::map<std::string, _NoticePtrList> noticeMap;
+
+        void Join(_TransactionHandler&);
+    };
+
+    void _SendNotices(_TransactionHandler&);
+
     /// @}
 
     // --------------------------------------------------------------------- //
@@ -524,6 +557,7 @@ public:
     ///
     /// @{
 
+public:
     /// Get the global variant fallback preferences used in new UsdStages.
     USD_API
     static PcpVariantFallbackMap GetGlobalVariantFallbacks();
@@ -2231,6 +2265,9 @@ private:
 
     TfNotice::Key _resolverChangeKey;
 
+    // Keep track of transaction handlers used to manage Usd Notices. 
+    std::vector<_TransactionHandler> _transactions;
+
     // Data for pending change processing.
     class _PendingChanges;
     _PendingChanges* _pendingChanges;
@@ -2406,6 +2443,28 @@ UsdStage::_SetMetadata(const UsdObject &object, const TfToken& key,
     return _SetEditTargetMappedMetadata(object, key, keyPath, value);
 }
 
+template<class T, typename... Args>
+void
+UsdStage::_Notify(Args&&... args)
+{
+    UsdStageWeakPtr self(this);
+    auto notice = std::unique_ptr<T>(new T(self, std::forward<Args>(args)...));
+
+    // Capture the notice to be processed later f a transaction a transaction is 
+    // pending.
+    if (_transactions.size() > 0) {
+        _TransactionHandler& transaction = _transactions.back();
+        
+        // Store notices per type name, so that each type can be merged if 
+        // required.
+        std::string name = typeid(notice).name();
+        transaction.noticeMap[name].push_back(std::move(notice));
+    }
+    // Otherwise, send the notice.
+    else {
+        notice->Send(self);
+    }
+}
 
 PXR_NAMESPACE_CLOSE_SCOPE
 

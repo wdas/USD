@@ -2056,6 +2056,85 @@ UsdStage::_DiscoverPayloads(const SdfPath& rootPath,
     }
 }
 
+bool
+UsdStage::IsInTransaction()
+{
+    return _transactions.size() > 0;
+}
+
+void
+UsdStage::BeginTransaction()
+{
+    _transactions.push_back(_TransactionHandler());
+}
+
+void
+UsdStage::EndTransaction()
+{
+    TF_VERIFY(_transactions.size() > 0);
+    _TransactionHandler& transaction = _transactions.back();
+
+    // If there are only one transaction left, process all notices.
+    if (_transactions.size() == 1) {
+        _SendNotices(transaction);
+    }
+    // Otherwise, it means that we are in a nested transaction that should
+    // not be processed yet. Join transaction data with next handler.
+    else {
+       (_transactions.end()-2)->Join(transaction);
+    }
+
+    _transactions.pop_back();
+}
+
+void
+UsdStage::_SendNotices(_TransactionHandler& transaction)
+{
+    UsdStageWeakPtr self(this);
+
+    for (auto& element : transaction.noticeMap) {
+        _NoticePtrList& notices = element.second;
+        TF_VERIFY(notices.size() > 0);
+
+        // If there are more than one notice for this type and
+        // if the notices are mergeable, we only need to keep the
+        // first notice, and all other can be pruned. 
+        if (notices.size() > 1 && notices[0]->IsMergeable()) {
+            _NoticePtr& notice = notices.at(0);
+            auto it = std::next(notices.begin());
+
+            while(it != notices.end()) {
+                // Attempt to merge content of notice with first notice
+                // if this is possible.
+                notice->Merge(**it);
+                it = notices.erase(it);
+            }
+        }
+
+        // Send all remaining notices.
+        for (const auto& notice: notices) {
+            notice->Send(self);
+        }
+    }
+}
+
+void
+UsdStage::_TransactionHandler::Join(_TransactionHandler& transaction)
+{
+    for (auto& element : transaction.noticeMap) {
+        _NoticePtrList& source = element.second;
+        _NoticePtrList& target = noticeMap[element.first];
+
+        target.reserve(target.size() + source.size());
+        std::move(
+            std::begin(source), 
+            std::end(source), 
+            std::back_inserter(target));
+        source.clear();
+    }
+    transaction.noticeMap.clear();
+}
+
 UsdPrim
 UsdStage::Load(const SdfPath& path, UsdLoadPolicy policy)
 {

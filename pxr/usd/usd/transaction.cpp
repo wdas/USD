@@ -33,12 +33,12 @@ PXR_NAMESPACE_OPEN_SCOPE
 UsdTransaction::UsdTransaction(const UsdStageWeakPtr& stage)
     : _stage(stage)
 {
-
+    _stage->BeginTransaction();
 }
 
 UsdTransaction::~UsdTransaction()
 {
-
+    _stage->EndTransaction();
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE
