@@ -33,6 +33,7 @@ TF_WRAP_MODULE
     TF_WRAP(UsdTimeCode);
     TF_WRAP(UsdTokens);
     TF_WRAP(UsdInterpolationType);
+    TF_WRAP(UsdTransaction);
 
     // UsdObject and its subclasses.
     TF_WRAP(UsdObject); 

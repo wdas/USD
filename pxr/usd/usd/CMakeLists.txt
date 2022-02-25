@@ -63,6 +63,7 @@ pxr_library(usd
         stagePopulationMask
         timeCode
         tokens
+        transaction
         typed
         usdFileFormat
         usdaFileFormat
@@ -141,6 +142,7 @@ pxr_library(usd
         wrapStageLoadRules.cpp
         wrapStagePopulationMask.cpp
         wrapTokens.cpp
+        wrapTransaction.cpp
         wrapTimeCode.cpp
         wrapTyped.cpp
         wrapUtils.cpp
