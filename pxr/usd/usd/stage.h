@@ -35,6 +35,7 @@
 #include "pxr/usd/usd/stageLoadRules.h"
 #include "pxr/usd/usd/stagePopulationMask.h"
 #include "pxr/usd/usd/primFlags.h"
+#include "pxr/usd/usd/notice.h"
 
 #include "pxr/base/tf/declarePtrs.h"
 #include "pxr/base/tf/hashmap.h"

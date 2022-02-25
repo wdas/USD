@@ -27,7 +27,6 @@
 #include "pxr/pxr.h"
 #include "pxr/usd/usd/api.h"
 #include "pxr/usd/usd/common.h"
-#include "pxr/usd/usd/object.h"
 
 #include "pxr/usd/sdf/changeList.h"
 #include "pxr/usd/sdf/path.h"
@@ -35,6 +34,7 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+class UsdObject;
 
 /// \class UsdNotice
 ///

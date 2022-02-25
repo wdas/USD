@@ -23,6 +23,7 @@
 //
 #include "pxr/pxr.h"
 #include "pxr/usd/usd/notice.h"
+#include "pxr/usd/usd/object.h"
 #include "pxr/base/tf/pyNoticeWrapper.h"
 #include "pxr/base/tf/pyResultConversions.h"
 #include <boost/python.hpp>

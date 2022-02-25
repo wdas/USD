@@ -23,6 +23,7 @@
 //
 #include "pxr/pxr.h"
 #include "pxr/usd/usd/notice.h"
+#include "pxr/usd/usd/object.h"
 #include "pxr/usd/usd/stage.h"
 #include "pxr/base/tf/stl.h"
 
