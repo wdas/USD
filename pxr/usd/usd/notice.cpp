@@ -69,6 +69,24 @@ UsdNotice::StageEditTargetChanged::~StageEditTargetChanged() {}
 
 UsdNotice::LayerMutingChanged::~LayerMutingChanged() {}
 
+void
+UsdNotice::LayerMutingChanged::Merge(const UsdNotice::StageNotice& notice)
+{
+    const UsdNotice::LayerMutingChanged& _notice = 
+        dynamic_cast<const UsdNotice::LayerMutingChanged&>(notice);
+
+    // TODO: Add logic to merge data
+}
+
+void
+UsdNotice::ObjectsChanged::Merge(const UsdNotice::StageNotice& notice)
+{
+    const UsdNotice::ObjectsChanged& _notice = 
+        dynamic_cast<const UsdNotice::ObjectsChanged&>(notice);
+
+    // TODO: Add logic to merge data
+}
+
 TfTokenVector 
 UsdNotice::ObjectsChanged::PathRange::const_iterator::GetChangedFields() const
 {

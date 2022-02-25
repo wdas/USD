@@ -54,6 +54,9 @@ public:
         /// Return the stage associated with this notice.
         const UsdStageWeakPtr &GetStage() const { return _stage; }
 
+        virtual bool IsMergeable() const { return false; }
+        virtual void Merge(const StageNotice&) {}
+
     private:
         UsdStageWeakPtr _stage;
     };
@@ -75,6 +78,8 @@ public:
         explicit StageContentsChanged(const UsdStageWeakPtr& stage)
             : StageNotice(stage) {}
         USD_API virtual ~StageContentsChanged();
+
+        bool IsMergeable() const override { return true; }
     };
 
     /// \class ObjectsChanged
@@ -136,6 +141,9 @@ public:
         /// Return true if \p obj was changed but not resynced by the layer
         /// changes that generated this notice.
         USD_API bool ChangedInfoOnly(const UsdObject &obj) const;
+
+        bool IsMergeable() const override { return true; }
+        void Merge(const StageNotice&) override;
 
         /// \class PathRange
         /// An iterable range of paths to objects that have changed.
@@ -289,6 +297,8 @@ public:
         explicit StageEditTargetChanged(const UsdStageWeakPtr &stage)
             : StageNotice(stage) {}
         USD_API virtual ~StageEditTargetChanged();
+
+        bool IsMergeable() const override { return true; }
     };
 
     /// \class LayerMutingChanged
@@ -333,6 +343,9 @@ public:
         const std::vector<std::string>& GetUnmutedLayers() const {
             return _unMutedLayers;
         }
+
+        bool IsMergeable() const override { return true; }
+        void Merge(const StageNotice&) override;
 
     private:
         const std::vector<std::string>& _mutedLayers;
