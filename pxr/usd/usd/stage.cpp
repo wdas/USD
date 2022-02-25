@@ -2293,16 +2293,13 @@ UsdStage::LoadAndUnload(const SdfPathSet &loadSet,
     TF_DEBUG(USD_CHANGES).Msg("\nProcessing Load/Unload changes\n");
     _Recompose(changes);
 
-    UsdStageWeakPtr self(this);
-
     UsdNotice::ObjectsChanged::_PathsToChangesMap resyncChanges, infoChanges;
     for (SdfPath const &p: recomposePaths) {
         resyncChanges[p];
     }
 
-    UsdNotice::ObjectsChanged(self, &resyncChanges, &infoChanges).Send(self);
-
-    UsdNotice::StageContentsChanged(self).Send(self);
+    _Notify<UsdNotice::ObjectsChanged>(&resyncChanges, &infoChanges);
+    _Notify<UsdNotice::StageContentsChanged>();
 }
 
 SdfPathSet
@@ -2356,11 +2353,10 @@ UsdStage::SetLoadRules(UsdStageLoadRules const &rules)
     _Recompose(changes);
 
     // Notify.
-    UsdStageWeakPtr self(this);
     UsdNotice::ObjectsChanged::_PathsToChangesMap resyncChanges, infoChanges;
     resyncChanges[SdfPath::AbsoluteRootPath()];
-    UsdNotice::ObjectsChanged(self, &resyncChanges, &infoChanges).Send(self);
-    UsdNotice::StageContentsChanged(self).Send(self);
+    _Notify<UsdNotice::ObjectsChanged>(&resyncChanges, &infoChanges);
+    _Notify<UsdNotice::StageContentsChanged>();
 }
 
 void
@@ -2374,11 +2370,10 @@ UsdStage::SetPopulationMask(UsdStagePopulationMask const &mask)
     _Recompose(changes);
 
     // Notify.
-    UsdStageWeakPtr self(this);
     UsdNotice::ObjectsChanged::_PathsToChangesMap resyncChanges, infoChanges;
     resyncChanges[SdfPath::AbsoluteRootPath()];
-    UsdNotice::ObjectsChanged(self, &resyncChanges, &infoChanges).Send(self);
-    UsdNotice::StageContentsChanged(self).Send(self);
+    _Notify<UsdNotice::ObjectsChanged>(&resyncChanges, &infoChanges);
+    _Notify<UsdNotice::StageContentsChanged>();
 }
 
 void
@@ -3598,8 +3593,7 @@ UsdStage::SetEditTarget(const UsdEditTarget &editTarget)
     // If different from current, set EditTarget and notify.
     if (editTarget != _editTarget) {
         _editTarget = editTarget;
-        UsdStageWeakPtr self(this);
-        UsdNotice::StageEditTargetChanged(self).Send(self);
+        _Notify<UsdNotice::StageEditTargetChanged>();
     }
 }
 
@@ -3695,12 +3689,10 @@ UsdStage::MuteAndUnmuteLayers(const std::vector<std::string> &muteLayers,
     _cache->RequestLayerMuting(muteLayers, unmuteLayers, &changes, 
             &newMutedLayers, &newUnMutedLayers);
 
-    UsdStageWeakPtr self(this);
-
     // Notify for layer muting/unmuting
     if (!newMutedLayers.empty() || !newUnMutedLayers.empty()) {
-        UsdNotice::LayerMutingChanged(self, newMutedLayers, newUnMutedLayers)
-            .Send(self);
+        _Notify<UsdNotice::LayerMutingChanged>(
+            newMutedLayers, newUnMutedLayers);
     }
 
     if (changes.IsEmpty()) {
@@ -3711,9 +3703,8 @@ UsdStage::MuteAndUnmuteLayers(const std::vector<std::string> &muteLayers,
     _PathsToChangesMap resyncChanges, infoChanges;
     _Recompose(changes, &resyncChanges);
 
-    UsdNotice::ObjectsChanged(self, &resyncChanges, &infoChanges)
-        .Send(self);
-    UsdNotice::StageContentsChanged(self).Send(self);
+    _Notify<UsdNotice::ObjectsChanged>(&resyncChanges, &infoChanges);
+    _Notify<UsdNotice::StageContentsChanged>();
 }
 
 const std::vector<std::string>&
@@ -4231,14 +4222,13 @@ UsdStage::_ProcessPendingChanges()
     _pendingChanges = nullptr;
 
     if (!recomposeChanges.empty() || !otherInfoChanges.empty()) {
-        UsdStageWeakPtr self(this);
 
         // Notify about changed objects.
-        UsdNotice::ObjectsChanged(
-            self, &recomposeChanges, &otherInfoChanges).Send(self);
+        _Notify<UsdNotice::ObjectsChanged>(
+            &recomposeChanges, &otherInfoChanges);
 
         // Receivers can now refresh their caches... or just dirty them
-        UsdNotice::StageContentsChanged(self).Send(self);
+        _Notify<UsdNotice::StageContentsChanged>();
     }
 }
 
@@ -8769,11 +8759,10 @@ UsdStage::SetInterpolationType(UsdInterpolationType interpolationType)
         _interpolationType = interpolationType;
 
         // Notify, as interpolated attributes values have likely changed.
-        UsdStageWeakPtr self(this);
         UsdNotice::ObjectsChanged::_PathsToChangesMap resyncChanges, infoChanges;
         resyncChanges[SdfPath::AbsoluteRootPath()];
-        UsdNotice::ObjectsChanged(self, &resyncChanges, &infoChanges).Send(self);
-        UsdNotice::StageContentsChanged(self).Send(self);
+        _Notify<UsdNotice::ObjectsChanged>(&resyncChanges, &infoChanges);
+        _Notify<UsdNotice::StageContentsChanged>();
     }
 }
 
