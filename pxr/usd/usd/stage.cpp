@@ -2063,9 +2063,12 @@ UsdStage::IsInTransaction()
 }
 
 void
-UsdStage::BeginTransaction()
+UsdStage::BeginTransaction(const NoticeCaturePredicateFunc& predicate)
 {
-    _transactions.push_back(_TransactionHandler());
+    _TransactionHandler transaction;
+    transaction.predicate = predicate;
+
+    _transactions.push_back(std::move(transaction));
 }
 
 void

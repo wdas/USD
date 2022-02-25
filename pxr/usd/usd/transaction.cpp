@@ -30,10 +30,11 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-UsdTransaction::UsdTransaction(const UsdStageWeakPtr& stage)
+UsdTransaction::UsdTransaction(const UsdStageWeakPtr& stage, 
+                               const NoticeCaturePredicateFunc& predicate)
     : _stage(stage)
 {
-    _stage->BeginTransaction();
+    _stage->BeginTransaction(predicate);
 }
 
 UsdTransaction::~UsdTransaction()

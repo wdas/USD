@@ -34,7 +34,8 @@ PXR_NAMESPACE_OPEN_SCOPE
 class UsdTransaction {
 public:
     USD_API
-    UsdTransaction(const UsdStageWeakPtr&);
+    UsdTransaction(const UsdStageWeakPtr&, 
+                   const NoticeCaturePredicateFunc& predicate=nullptr);
     USD_API
     ~UsdTransaction();
 

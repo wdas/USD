@@ -81,6 +81,9 @@ class UsdPrimRange;
 using _NoticePtr = std::unique_ptr<UsdNotice::StageNotice>;
 using _NoticePtrList = std::vector<_NoticePtr>;
 
+using NoticeCaturePredicateFunc = 
+    std::function<bool (const UsdNotice::StageNotice &)>;
+
 SDF_DECLARE_HANDLES(SdfLayer);
 
 /// \class UsdStage
@@ -488,7 +491,7 @@ public:
     bool IsInTransaction();
 
     USD_API
-    void BeginTransaction();
+    void BeginTransaction(const NoticeCaturePredicateFunc& predicate=nullptr);
     USD_API
     void EndTransaction();
 
@@ -499,9 +502,11 @@ private:
     struct _TransactionHandler {
         _TransactionHandler() {}
         _TransactionHandler(_TransactionHandler&& t)
-            : noticeMap(std::move(t.noticeMap)) {}
+            : noticeMap(std::move(t.noticeMap))
+            , predicate(t.predicate) {}
 
         std::map<std::string, _NoticePtrList> noticeMap;
+        NoticeCaturePredicateFunc predicate = nullptr;
 
         void Join(_TransactionHandler&);
     };
@@ -2454,7 +2459,11 @@ UsdStage::_Notify(Args&&... args)
     // pending.
     if (_transactions.size() > 0) {
         _TransactionHandler& transaction = _transactions.back();
-        
+
+        // Indicate whether the notice needs to be captured.
+        if (transaction.predicate && !transaction.predicate(*notice.get()))
+            return;
+
         // Store notices per type name, so that each type can be merged if 
         // required.
         std::string name = typeid(notice).name();

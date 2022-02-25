@@ -25,20 +25,45 @@
 #include "pxr/usd/usd/transaction.h"
 #include "pxr/usd/usd/stage.h"
 #include "pxr/usd/usd/common.h"
+#include "pxr/base/tf/pyFunction.h"
+#include "pxr/base/tf/pyNoticeWrapper.h"
 
 #include <boost/python.hpp>
+
+#include <functional>
 
 using namespace boost::python;
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
+using _CaturePredicateFuncRaw = bool (object const &);
+using _CaturePredicateFunc = std::function<_CaturePredicateFuncRaw>;
+
+NoticeCaturePredicateFunc _WrapPredicate(const _CaturePredicateFunc &fn)
+{
+    return [&](const UsdNotice::StageNotice& notice) { 
+        TfPyLock lock;
+
+        if (!fn)
+            return true;
+
+        // TODO:: Not sure whether this works with Python notices.
+        object _notice = Tf_PyNoticeObjectGenerator::Invoke(notice);
+        return fn(_notice);
+    };
+}
 
 // Expose C++ RAII class as python context manager.
 struct PythonUsdTransaction
 {
-    PythonUsdTransaction(const UsdStageWeakPtr& stage)
-        : _makeContext([&]() { return new UsdTransaction(stage); })
-    {}
+    PythonUsdTransaction(const UsdStageWeakPtr& stage,
+                         const _CaturePredicateFunc &predicate)
+        : _predicate(predicate)
+    {
+        _makeContext = [&]() { 
+            return new UsdTransaction(stage, _WrapPredicate(_predicate)); 
+        };
+    }
 
     // Instantiate the C++ class object and hold it by shared_ptr.
     void __enter__() { _context.reset(_makeContext()); }
@@ -49,13 +74,19 @@ struct PythonUsdTransaction
 private:
     std::shared_ptr<UsdTransaction> _context;
     std::function<UsdTransaction *()> _makeContext;
+
+    _CaturePredicateFunc _predicate;
 };
 
 void
 wrapUsdTransaction()
 {    
+    // Ensure that predicate function can be passed from Python.
+    TfPyFunctionFromPython<_CaturePredicateFuncRaw>();
+
     class_<PythonUsdTransaction>("Transaction", no_init)
-        .def(init<const UsdStageWeakPtr&>(arg("stage")))
+        .def(init<const UsdStageWeakPtr&, const _CaturePredicateFunc&>
+             ((arg("stage"), arg("predicate")=object())))
         .def("__enter__", &PythonUsdTransaction::__enter__)
         .def("__exit__", &PythonUsdTransaction::__exit__)
         ;
