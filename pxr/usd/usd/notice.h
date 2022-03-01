@@ -110,16 +110,18 @@ public:
     /// GetChangedInfoOnlyPaths() methods.
     ///
     class ObjectsChanged : public StageNotice {
+        // TODO: Is it safe to move resyncChanges and infoChanges during 
+        // construction to prevent a copy?
         using _PathsToChangesMap = 
-            std::map<SdfPath, std::vector<const SdfChangeList::Entry*>>;
+            std::map<SdfPath, std::vector<SdfChangeList::Entry>>;
 
         friend class UsdStage;
         ObjectsChanged(const UsdStageWeakPtr &stage,
-                       const _PathsToChangesMap *resyncChanges,
-                       const _PathsToChangesMap *infoChanges)
+                       _PathsToChangesMap& resyncChanges,
+                       _PathsToChangesMap& infoChanges)
             : StageNotice(stage)
-            , _resyncChanges(resyncChanges)
-            , _infoChanges(infoChanges) {}
+            , _resyncChanges(std::move(resyncChanges))
+            , _infoChanges(std::move(infoChanges)) {}
     public:
         USD_API virtual ~ObjectsChanged();
 
@@ -283,8 +285,8 @@ public:
         USD_API bool HasChangedFields(const SdfPath &path) const;
 
     private:
-        const _PathsToChangesMap *_resyncChanges;
-        const _PathsToChangesMap *_infoChanges;
+        _PathsToChangesMap _resyncChanges;
+        _PathsToChangesMap _infoChanges;
     };
 
     /// \class StageEditTargetChanged
@@ -348,8 +350,11 @@ public:
         void Merge(const StageNotice&) override;
 
     private:
-        const std::vector<std::string>& _mutedLayers;
-        const std::vector<std::string>& _unMutedLayers;
+        // TODO: Is it reasonable to copy incoming vectors?
+        // To prevent a copy on initialization, we could use std::move,
+        // but it might cause UB elsewhere in the code.
+        const std::vector<std::string> _mutedLayers;
+        const std::vector<std::string> _unMutedLayers;
     };
 
 };

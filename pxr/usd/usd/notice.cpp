@@ -91,10 +91,10 @@ TfTokenVector
 UsdNotice::ObjectsChanged::PathRange::const_iterator::GetChangedFields() const
 {
     TfTokenVector fields;
-    for (const SdfChangeList::Entry* entry : base()->second) {
+    for (const SdfChangeList::Entry& entry : base()->second) {
         fields.insert(fields.end(),
-            make_transform_iterator(entry->infoChanged.begin(), TfGet<0>()),
-            make_transform_iterator(entry->infoChanged.end(), TfGet<0>()));
+            make_transform_iterator(entry.infoChanged.begin(), TfGet<0>()),
+            make_transform_iterator(entry.infoChanged.end(), TfGet<0>()));
     }
 
     std::sort(fields.begin(), fields.end());
@@ -105,8 +105,8 @@ UsdNotice::ObjectsChanged::PathRange::const_iterator::GetChangedFields() const
 bool 
 UsdNotice::ObjectsChanged::PathRange::const_iterator::HasChangedFields() const
 {
-    for (const SdfChangeList::Entry* entry : base()->second) {
-        if (!entry->infoChanged.empty()) {
+    for (const SdfChangeList::Entry& entry : base()->second) {
+        if (!entry.infoChanged.empty()) {
             return true;
         }
     }
@@ -121,7 +121,7 @@ UsdNotice::ObjectsChanged::ResyncedObject(const UsdObject &obj) const
     // XXX: We don't need the longest prefix here, we just need to know if
     // a prefix exists in the map.
     return SdfPathFindLongestPrefix(
-        *_resyncChanges, obj.GetPath()) != _resyncChanges->end();
+        _resyncChanges, obj.GetPath()) != _resyncChanges.end();
 }
 
 bool 
@@ -130,19 +130,19 @@ UsdNotice::ObjectsChanged::ChangedInfoOnly(const UsdObject &obj) const
     // XXX: We don't need the longest prefix here, we just need to know if
     // a prefix exists in the map.
     return SdfPathFindLongestPrefix(
-        *_infoChanges, obj.GetPath()) != _infoChanges->end();
+        _infoChanges, obj.GetPath()) != _infoChanges.end();
 }
 
 UsdNotice::ObjectsChanged::PathRange
 UsdNotice::ObjectsChanged::GetResyncedPaths() const
 {
-    return PathRange(_resyncChanges);
+    return PathRange(&_resyncChanges);
 }
 
 UsdNotice::ObjectsChanged::PathRange
 UsdNotice::ObjectsChanged::GetChangedInfoOnlyPaths() const
 {
-    return PathRange(_infoChanges);
+    return PathRange(&_infoChanges);
 }
 
 TfTokenVector 
