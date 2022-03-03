@@ -2301,7 +2301,7 @@ UsdStage::LoadAndUnload(const SdfPathSet &loadSet,
         resyncChanges[p];
     }
 
-    _Notify<UsdNotice::ObjectsChanged>(resyncChanges, infoChanges);
+    _Notify<UsdNotice::ObjectsChanged>(std::move(resyncChanges), std::move(infoChanges));
     _Notify<UsdNotice::StageContentsChanged>();
 }
 
@@ -2358,7 +2358,7 @@ UsdStage::SetLoadRules(UsdStageLoadRules const &rules)
     // Notify.
     UsdNotice::ObjectsChanged::_PathsToChangesMap resyncChanges, infoChanges;
     resyncChanges[SdfPath::AbsoluteRootPath()];
-    _Notify<UsdNotice::ObjectsChanged>(resyncChanges, infoChanges);
+    _Notify<UsdNotice::ObjectsChanged>(std::move(resyncChanges), std::move(infoChanges));
     _Notify<UsdNotice::StageContentsChanged>();
 }
 
@@ -2375,7 +2375,7 @@ UsdStage::SetPopulationMask(UsdStagePopulationMask const &mask)
     // Notify.
     UsdNotice::ObjectsChanged::_PathsToChangesMap resyncChanges, infoChanges;
     resyncChanges[SdfPath::AbsoluteRootPath()];
-    _Notify<UsdNotice::ObjectsChanged>(resyncChanges, infoChanges);
+    _Notify<UsdNotice::ObjectsChanged>(std::move(resyncChanges), std::move(infoChanges));
     _Notify<UsdNotice::StageContentsChanged>();
 }
 
@@ -3706,7 +3706,7 @@ UsdStage::MuteAndUnmuteLayers(const std::vector<std::string> &muteLayers,
     _PathsToChangesMap resyncChanges, infoChanges;
     _Recompose(changes, &resyncChanges);
 
-    _Notify<UsdNotice::ObjectsChanged>(resyncChanges, infoChanges);
+    _Notify<UsdNotice::ObjectsChanged>(std::move(resyncChanges), std::move(infoChanges));
     _Notify<UsdNotice::StageContentsChanged>();
 }
 
@@ -4227,7 +4227,7 @@ UsdStage::_ProcessPendingChanges()
     if (!recomposeChanges.empty() || !otherInfoChanges.empty()) {
 
         // Notify about changed objects.
-        _Notify<UsdNotice::ObjectsChanged>(recomposeChanges, otherInfoChanges);
+        _Notify<UsdNotice::ObjectsChanged>(std::move(recomposeChanges), std::move(otherInfoChanges));
 
         // Receivers can now refresh their caches... or just dirty them
         _Notify<UsdNotice::StageContentsChanged>();
@@ -8763,7 +8763,7 @@ UsdStage::SetInterpolationType(UsdInterpolationType interpolationType)
         // Notify, as interpolated attributes values have likely changed.
         UsdNotice::ObjectsChanged::_PathsToChangesMap resyncChanges, infoChanges;
         resyncChanges[SdfPath::AbsoluteRootPath()];
-        _Notify<UsdNotice::ObjectsChanged>(resyncChanges, infoChanges);
+        _Notify<UsdNotice::ObjectsChanged>(std::move(resyncChanges), std::move(infoChanges));
         _Notify<UsdNotice::StageContentsChanged>();
     }
 }

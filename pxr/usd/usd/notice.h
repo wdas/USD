@@ -117,11 +117,11 @@ public:
 
         friend class UsdStage;
         ObjectsChanged(const UsdStageWeakPtr &stage,
-                       _PathsToChangesMap& resyncChanges,
-                       _PathsToChangesMap& infoChanges)
+                       _PathsToChangesMap&& resyncChanges,
+                       _PathsToChangesMap&& infoChanges)
             : StageNotice(stage)
-            , _resyncChanges(std::move(resyncChanges))
-            , _infoChanges(std::move(infoChanges)) {}
+            , _resyncChanges(resyncChanges)
+            , _infoChanges(infoChanges) {}
     public:
         USD_API virtual ~ObjectsChanged();
 
