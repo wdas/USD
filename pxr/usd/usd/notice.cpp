@@ -70,21 +70,40 @@ UsdNotice::StageEditTargetChanged::~StageEditTargetChanged() {}
 UsdNotice::LayerMutingChanged::~LayerMutingChanged() {}
 
 void
-UsdNotice::LayerMutingChanged::Merge(const UsdNotice::StageNotice& notice)
+UsdNotice::LayerMutingChanged::Merge(UsdNotice::StageNotice&& notice)
 {
-    const UsdNotice::LayerMutingChanged& _notice = 
-        dynamic_cast<const UsdNotice::LayerMutingChanged&>(notice);
+    UsdNotice::LayerMutingChanged&& _notice = 
+        dynamic_cast<UsdNotice::LayerMutingChanged&&>(notice);
 
-    // TODO: Add logic to merge data
+    for (std::string& muted_layer : _notice._mutedLayers) {
+        _mutedLayers.push_back(std::move(muted_layer));
+    }
+
+    for (std::string& unMuted_layer : _notice._unMutedLayers) {
+        _unMutedLayers.push_back(std::move(unMuted_layer));
+    }
+
 }
 
 void
-UsdNotice::ObjectsChanged::Merge(const UsdNotice::StageNotice& notice)
+UsdNotice::ObjectsChanged::Merge(UsdNotice::StageNotice&& notice)
 {
-    const UsdNotice::ObjectsChanged& _notice = 
-        dynamic_cast<const UsdNotice::ObjectsChanged&>(notice);
+    UsdNotice::ObjectsChanged&& _notice = 
+        dynamic_cast<UsdNotice::ObjectsChanged&&>(notice);
 
-    // TODO: Add logic to merge data
+    for (auto& map_entry : _notice._resyncChanges) {
+        _resyncChanges[map_entry.first];
+        for (SdfChangeList::Entry& change_entry : map_entry.second) {
+            _resyncChanges[map_entry.first].push_back(std::move(change_entry));
+        }
+    }
+    for (auto& map_entry : _notice._infoChanges) {
+        _infoChanges[map_entry.first];
+        for (SdfChangeList::Entry& change_entry : map_entry.second) {
+            _infoChanges[map_entry.first].push_back(std::move(change_entry));
+        }
+    }
+
 }
 
 TfTokenVector 

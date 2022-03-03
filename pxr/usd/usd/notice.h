@@ -55,7 +55,7 @@ public:
         const UsdStageWeakPtr &GetStage() const { return _stage; }
 
         virtual bool IsMergeable() const { return false; }
-        virtual void Merge(const StageNotice&) {}
+        virtual void Merge(StageNotice&&) {}
 
     private:
         UsdStageWeakPtr _stage;
@@ -145,7 +145,7 @@ public:
         USD_API bool ChangedInfoOnly(const UsdObject &obj) const;
 
         bool IsMergeable() const override { return true; }
-        void Merge(const StageNotice&) override;
+        void Merge(StageNotice&&) override;
 
         /// \class PathRange
         /// An iterable range of paths to objects that have changed.
@@ -320,11 +320,11 @@ public:
     class LayerMutingChanged : public StageNotice {
     public:
         explicit LayerMutingChanged(const UsdStageWeakPtr &stage, 
-                const std::vector<std::string>& mutedLayers, 
-                const std::vector<std::string>& unmutedLayers)
+                std::vector<std::string> mutedLayers, 
+                std::vector<std::string> unmutedLayers)
             : StageNotice(stage),
-             _mutedLayers(mutedLayers),
-             _unMutedLayers(unmutedLayers) {}
+             _mutedLayers(std::move(mutedLayers)),
+             _unMutedLayers(std::move(unmutedLayers)) {}
 
         USD_API virtual ~LayerMutingChanged();
 
@@ -347,14 +347,14 @@ public:
         }
 
         bool IsMergeable() const override { return true; }
-        void Merge(const StageNotice&) override;
+        void Merge(StageNotice&&) override;
 
     private:
         // TODO: Is it reasonable to copy incoming vectors?
         // To prevent a copy on initialization, we could use std::move,
         // but it might cause UB elsewhere in the code.
-        const std::vector<std::string> _mutedLayers;
-        const std::vector<std::string> _unMutedLayers;
+        std::vector<std::string> _mutedLayers;
+        std::vector<std::string> _unMutedLayers;
     };
 
 };

@@ -2109,7 +2109,7 @@ UsdStage::_SendNotices(_TransactionHandler& transaction)
             while(it != notices.end()) {
                 // Attempt to merge content of notice with first notice
                 // if this is possible.
-                notice->Merge(**it);
+                notice->Merge(std::move(**it));
                 it = notices.erase(it);
             }
         }
